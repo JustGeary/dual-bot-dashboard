@@ -1,0 +1,18 @@
+{
+  "sascha": {
+    "state": "online",
+    "image": "saschabot.png",
+    "statusText": "Operational",
+    "useImage": true
+  },
+  "joe": {
+    "state": "online",
+    "image": "joebot.png",
+    "statusText": "All systems go",
+    "useImage": true
+  },
+  "ticker": [
+    "Migration to JP Morgan in progress",
+    "System stable"
+  ]
+}
