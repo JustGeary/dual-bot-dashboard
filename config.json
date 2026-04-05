@@ -1,18 +1,1 @@
-{
-  "sascha": {
-    "state": "online",
-    "image": "saschabot.png",
-    "statusText": "Operational",
-    "useImage": true
-  },
-  "joe": {
-    "state": "online",
-    "image": "joebot.png",
-    "statusText": "All systems go",
-    "useImage": true
-  },
-  "ticker": [
-    "Migration to JP Morgan in progress",
-    "System stable"
-  ]
-}
+{"sascha":{"state":"offline","statusText":"Service Offline","subStatus":"System appears to have taken an unplanned coffee break, maybe someone's on it.","image":"saschabot.png","useImage":true},"joe":{"state":"offline","statusText":"Connection Lost","subStatus":"Connection lost—time to dive into cables and configs, fingers crossed!","image":"Joebot.png","useImage":true},"ticker":["Schedule controlled update"]}
