@@ -1,1 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Dual Migration Console</title>
 
+<style>
+
+/* BASE */
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #0b0f1a;
+  font-family: monospace;
+  color: #00ffe1;
+}
+
+/* APP */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* PROGRESS BAR */
+#progressContainer {
+  border: 1px solid #00ffe1;
+  margin: 10px;
+  padding: 5px;
+}
+
+#progressBar {
+  height: 10px;
+  background: #00ffe1;
+  width: 0%;
+  transition: width 1s;
+}
+
+#progressText {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* GRID */
+#layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 260px 1fr 1fr 260px;
+  gap: 10px;
+  padding: 10px;
+  overflow: hidden;
+}
+
+/* FEEDS */
+.feed {
+  position: relative;
+  overflow: hidden;
+  padding: 10px;
+}
+
+.feed-track {
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+}
+
+/* CARDS */
+.card {
+  padding: 8px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.left .card {
+  border: 1px solid #00ffe1;
+  box-shadow: 0 0 6px #00ffe1;
+}
+
+.right .card {
+  border: 1px solid #00ff88;
+  box-shadow: 0 0 6px #00ff88;
+  color: #00ff88;
+}
+
+/* PANELS */
+.panel {
+  padding: 10px;
+  border-radius: 10px;
+  transition: 0.3s;
+}
+
+.blue {
+  border: 1px solid #00ffe1;
+  box-shadow: 0 0 12px #00ffe1;
+}
+
+.green {
+  border: 1px solid #00ff88;
+  box-shadow: 0 0 12px #00ff88;
+  color: #00ff88;
+}
+
+/* AVATAR */
+.avatarPanel {
+  height: 160px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* STATUS */
+.statusText {
+  font-size: 14px;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+.subStatus {
+  font-size: 12px;
+  margin-top: 4px;
+  opacity: 0.9;
+}
+
+/* QR */
+.qr {
+  width: 90px;
+  margin: 10px auto;
+}
+
+/* TICKER */
+#ticker {
+  height: 30px;
+  border-top: 1px solid #00ffe1;
+  overflow: hidden;
+}
+
+#tickerText {
+  display: inline-block;
+  padding-left: 100%;
+  animation: scroll 20s linear infinite;
+}
+
+@keyframes scroll {
+  100% { transform: translateX(-100%); }
+}
+
+@keyframes scrollUp {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+  <div id="progressContainer">
+    <div id="progressBar"></div>
+    <div id="progressText"></div>
+  </div>
+
+  <div id="layout">
+
+    <div class="feed left">
+      <div class="feed-track" id="saschaTrack"></div>
+    </div>
+
+    <div class="panel blue">
+      <h2>🤖 SaschaBot</h2>
+      <div class="avatarPanel">
+        <img src="saschabot.png" class="avatarImg" id="saschaImg">
+      </div>
+      <div id="saschaStatus" class="statusText"></div>
+      <div id="saschaSubStatus" class="subStatus"></div>
+    </div>
+
+    <div class="panel green">
+      <h2>🤖 JoeBot</h2>
+      <div class="avatarPanel">
+        <img src="joebot.png" class="avatarImg" id="joeImg">
+      </div>
+      <div id="joeStatus" class="statusText"></div>
+      <div id="joeSubStatus" class="subStatus"></div>
+    </div>
+
+    <div class="feed right">
+      <div class="feed-track" id="joeTrack"></div>
+    </div>
+
+  </div>
+
+  <img src="QRCode.png" class="qr">
+
+  <div id="ticker">
+    <div id="tickerText"></div>
+  </div>
+
+</div>
+
+<script>
+
+const DATA_URL = "https://raw.githubusercontent.com/JustGeary/dual-bot-dashboard/refs/heads/main/data.json";
+const CONFIG_URL = "https://raw.githubusercontent.com/JustGeary/dual-bot-dashboard/refs/heads/main/config.json";
+
+function applyBotState(bot, config) {
+  const img = document.getElementById(bot + "Img");
+
+  if (config.useImage && config.image) {
+    img.src = config.image;
+  }
+
+  document.getElementById(bot + "Status").innerText = config.statusText || "";
+  document.getElementById(bot + "SubStatus").innerText = config.subStatus || "";
+}
+
+function buildScrollingFeed(trackId, data) {
+  const track = document.getElementById(trackId);
+
+  if (!data || data.length === 0) return;
+
+  const content = data.map(r => `<div class="card">${r.message}</div>`).join("");
+
+  track.innerHTML = content + content;
+
+  setTimeout(() => {
+    const container = track.parentElement;
+
+    if (track.scrollHeight > container.clientHeight) {
+      const duration = track.scrollHeight / 40;
+      track.style.animation = `scrollUp ${duration}s linear infinite`;
+    } else {
+      track.style.animation = "none";
+    }
+  }, 50);
+}
+
+function updateProgress() {
+  const start = new Date("2025-10-29");
+  const end = new Date("2026-04-29");
+  const now = new Date();
+
+  const percent = ((now - start) / (end - start)) * 100;
+  const safe = Math.min(Math.max(percent, 0), 100);
+
+  document.getElementById("progressBar").style.width = safe + "%";
+  document.getElementById("progressText").innerText = safe.toFixed(1) + "% complete";
+}
+
+async function loadData() {
+  const data = await (await fetch(DATA_URL + '?t=' + Date.now())).json();
+  const config = await (await fetch(CONFIG_URL + '?t=' + Date.now())).json();
+
+  buildScrollingFeed("saschaTrack", data.saschaReviews);
+  buildScrollingFeed("joeTrack", data.joeReviews);
+
+  applyBotState("sascha", config.sascha);
+  applyBotState("joe", config.joe);
+
+  document.getElementById("tickerText").innerText = (config.ticker || []).join(" • ");
+}
+
+loadData();
+updateProgress();
+
+setInterval(loadData, 3000);
+setInterval(updateProgress, 60000);
+
+</script>
+
+</body>
+</html>
